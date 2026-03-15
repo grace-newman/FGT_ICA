@@ -1,0 +1,13 @@
+.	Basic Statistics	Per Base Sequence Quality	Per Tile Sequence Quality	Per Sequence Quality Scores	Per Base Sequence Content	Per Sequence GC Content	Per Base N Content	Sequence Length Distribution	Sequence Duplication Levels	Overrepresented Sequences	Adapter Content
+GSM8263915_1	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263915_2	1	1	1	1	0.25	0.5	1	1	0.25	0.5	0.5
+GSM8263916_1	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263916_2	1	1	1	1	0.25	0.25	1	1	0.25	0.5	0.25
+GSM8263917_1	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263917_2	1	1	1	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263918_1	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263918_2	1	1	1	1	0.25	0.25	1	1	0.25	0.5	0.25
+GSM8263919_1	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.25
+GSM8263919_2	1	1	0.25	1	0.25	0.5	1	1	0.25	0.5	0.5
+GSM8263920_1	1	1	1	1	0.5	0.5	1	1	0.25	0.5	0.5
+GSM8263920_2	1	1	1	1	0.25	0.25	1	1	0.25	0.5	0.5

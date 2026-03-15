@@ -1,0 +1,13 @@
+Sample	Filename	File type	Encoding	Total Sequences	Sequences flagged as poor quality	Sequence length	%GC	total_deduplicated_percentage	avg_sequence_length	median_sequence_length	basic_statistics	per_base_sequence_quality	per_tile_sequence_quality	per_sequence_quality_scores	per_base_sequence_content	per_sequence_gc_content	per_base_n_content	sequence_length_distribution	sequence_duplication_levels	overrepresented_sequences	adapter_content
+GSM8263915_1	GSM8263915_1.fastq	Conventional base calls	Sanger / Illumina 1.9	48462933.0	0.0	150.0	54.0	33.67444439635203	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263915_2	GSM8263915_2.fastq	Conventional base calls	Sanger / Illumina 1.9	48462933.0	0.0	150.0	57.0	38.149685663448395	150.0	150	pass	pass	pass	pass	fail	warn	pass	pass	fail	warn	warn
+GSM8263916_1	GSM8263916_1.fastq	Conventional base calls	Sanger / Illumina 1.9	44815937.0	0.0	150.0	54.0	39.66607170119007	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263916_2	GSM8263916_2.fastq	Conventional base calls	Sanger / Illumina 1.9	44815937.0	0.0	150.0	57.0	41.202688330574055	150.0	150	pass	pass	pass	pass	fail	fail	pass	pass	fail	warn	fail
+GSM8263917_1	GSM8263917_1.fastq	Conventional base calls	Sanger / Illumina 1.9	44517457.0	0.0	150.0	52.0	39.31953139881409	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263917_2	GSM8263917_2.fastq	Conventional base calls	Sanger / Illumina 1.9	44517457.0	0.0	150.0	55.0	44.992520711052066	150.0	150	pass	pass	pass	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263918_1	GSM8263918_1.fastq	Conventional base calls	Sanger / Illumina 1.9	47540941.0	0.0	150.0	55.0	36.09839013814894	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263918_2	GSM8263918_2.fastq	Conventional base calls	Sanger / Illumina 1.9	47540941.0	0.0	150.0	57.0	37.87477438703814	150.0	150	pass	pass	pass	pass	fail	fail	pass	pass	fail	warn	fail
+GSM8263919_1	GSM8263919_1.fastq	Conventional base calls	Sanger / Illumina 1.9	50160914.0	0.0	150.0	52.0	27.51181652150378	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	fail
+GSM8263919_2	GSM8263919_2.fastq	Conventional base calls	Sanger / Illumina 1.9	50160914.0	0.0	150.0	54.0	32.601046387968886	150.0	150	pass	pass	fail	pass	fail	warn	pass	pass	fail	warn	warn
+GSM8263920_1	GSM8263920_1.fastq	Conventional base calls	Sanger / Illumina 1.9	55034765.0	0.0	150.0	52.0	22.784574457933935	150.0	150	pass	pass	pass	pass	warn	warn	pass	pass	fail	warn	warn
+GSM8263920_2	GSM8263920_2.fastq	Conventional base calls	Sanger / Illumina 1.9	55034765.0	0.0	150.0	54.0	27.110099397476223	150.0	150	pass	pass	pass	pass	fail	fail	pass	pass	fail	warn	warn

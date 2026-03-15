@@ -1,0 +1,13 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	GSM8263915_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263915_1_fastqc.zip
+FastQC	all_sections	GSM8263915_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263915_2_fastqc.zip
+FastQC	all_sections	GSM8263916_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263916_1_fastqc.zip
+FastQC	all_sections	GSM8263916_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263916_2_fastqc.zip
+FastQC	all_sections	GSM8263917_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263917_1_fastqc.zip
+FastQC	all_sections	GSM8263917_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263917_2_fastqc.zip
+FastQC	all_sections	GSM8263918_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263918_1_fastqc.zip
+FastQC	all_sections	GSM8263918_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263918_2_fastqc.zip
+FastQC	all_sections	GSM8263919_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263919_1_fastqc.zip
+FastQC	all_sections	GSM8263919_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263919_2_fastqc.zip
+FastQC	all_sections	GSM8263920_1	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263920_1_fastqc.zip
+FastQC	all_sections	GSM8263920_2	/localdisk/home/s2823303/FGT/ICA/GSE267325/fastqc/GSM8263920_2_fastqc.zip
