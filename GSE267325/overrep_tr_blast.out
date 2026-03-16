@@ -1,0 +1,26 @@
+seq1	gi|2548330551|gb|OQ915120.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC E_14 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330518|gb|OQ915119.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_4 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330516|gb|OQ915117.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_1 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330517|gb|OQ915118.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_3 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330515|gb|OQ915116.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC 48_1 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq2	gi|2708437963|ref|NR_046246.3|	100.000	1.30e-15	93.5	Rattus norvegicus 28S ribosomal RNA (Rn28s), ribosomal RNA
+seq2	gi|2548330551|gb|OQ915120.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC E_14 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq2	gi|2678886841|ref|XR_005503128.2|	100.000	1.30e-15	93.5	PREDICTED: Rattus norvegicus 28S ribosomal RNA (LOC120093067), rRNA
+seq2	gi|3117067138|pdb|9H4N|A2	100.000	1.30e-15	93.5	Chain A2, 28S ribosomal RNA
+seq2	gi|2548330518|gb|OQ915119.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_4 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq3	gi|3222201559|emb|OZ416237.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 13
+seq3	gi|3222201559|emb|OZ416237.1|	98.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 13
+seq3	gi|3059745171|ref|XR_013105701.1|	100.000	1.30e-15	93.5	PREDICTED: Arvicanthis niloticus uncharacterized LOC143435414 (LOC143435414), transcript variant X2, ncRNA
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	92.857	1.31e-05	60.2	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	0.002	52.8	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222221650|emb|OZ416247.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 23
+seq3	gi|3222227072|emb|OZ416251.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 27
+seq4	gi|3130139756|ref|XR_013433751.1|	100.000	1.30e-15	93.5	PREDICTED: Ictidomys tridecemlineatus 28S ribosomal RNA (LOC144374299), rRNA
+seq4	gi|3130139755|ref|XR_013433750.1|	100.000	1.30e-15	93.5	PREDICTED: Ictidomys tridecemlineatus 28S ribosomal RNA (LOC144374298), rRNA
+seq4	gi|3120489792|ref|XR_013343579.1|	100.000	1.30e-15	93.5	PREDICTED: Urocitellus parryii 28S ribosomal RNA (LOC144254726), rRNA
+seq4	gi|3222208241|emb|OZ416239.1|	100.000	1.30e-15	93.5	Myodes glareolus genome assembly, chromosome: 15
+seq4	gi|3222208241|emb|OZ416239.1|	98.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 15
+seq4	gi|3129676737|pdb|9MR4|5	100.000	1.30e-15	93.5	Chain 5, 28S rRNA

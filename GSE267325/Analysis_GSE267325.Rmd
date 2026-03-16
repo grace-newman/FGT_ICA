@@ -1,5 +1,389 @@
 ---
-title: "Analysis_GSE267325"
+title: "RNS-seq Analysis for GSE267325"
+author: "B282025"
+date: "25/03/2026"
 output: html_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis of RNA-seq data using R 
+```{r init, echo=FALSE}
+#Load the required libraries & load the files for the tutorial
+library(Rsubread)
+library(edgeR)
+library(limma)
+library(gplots)
+library(DESeq2)
+library(affy)
+library(QuasR)
+library(pheatmap)
+library(EnhancedVolcano)
+load("mytable_feaures")
+
+#We now have files for the tutorial and also data loaded into the workspace- use ls() and dir() to view this data
+ls()
+dir()
+```
+
+Once we have loaded the data we are ready to run some further analysis.
+
+```{r input_processing, echo=FALSE}
+#Some further processing to access count data and column names.
+table_rnaseq <- (mytable_feaures)$counts
+colnames_rnaseq <- colnames(table_rnaseq)
+print(colnames_rnaseq)
+
+# Generate an 'adf data frame' for the annotation.  
+#This can be loaded from file but here I generate in code for a change...
+adf <-data.frame(Colnames =colnames_rnaseq)
+library(stringr)
+locc <- str_locate_all(pattern="Aligned.sortedByCoord.out.bam",adf$Colnames)
+adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
+
+#From the GEO page for this study-https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE267325
+
+# GSM8263915  dLAM1-CSF
+# GSM8263916  dLAM2-CSF
+# GSM8263917  dLAM3-CSF
+# GSM8263918  Mono-MΦ1-CSF
+# GSM8263919  Mono-MΦ2-CSF
+# GSM8263920  Mono-MΦ3-CSF
+
+
+#My samples are in the same order as the annotaion so I can just create some short names and add to annotation
+adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono-MΦ1","Mono-MΦ2","Mono-MΦ3")
+
+# Create a factor for the macrophage type
+cell_type <-c("dLAM", "dLAM", "dLAM", "Mono-MΦ", "Mono-MΦ", "Mono-MΦ")
+adf$CellType <- cell_type
+
+#Add some colours as well
+#See https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
+z <- factor(adf$CellType)
+adf$Colours <-rainbow(length(levels(z)))[z]
+
+
+#make sure the colnames of the study match the rownames of the annotation...
+rownames(adf) <-adf$Colnames
+if(identical(colnames_rnaseq,rownames(adf))==FALSE){
+  print("Names do not match")
+}else{
+  print("Names match.. OK to proceed")
+}
+
+#OK switch to shortnames to help with the figures
+#We can only swap this way because column order to consistent with adf
+rownames(adf) <-adf$ShortNames
+colnames(table_rnaseq) <-adf$ShortNames
+
+colnames_rnaseq <-colnames(table_rnaseq)
+
+```
+
+
+## Loading the Data into DESeq
+DESeq2 will used for the statistical analysis and the normalisation of the data. 
+```{r loading_deseq, echo=FALSE}
+#Create object for DESeq
+#NOTE the design for differential analysis is fed into this object 
+dds_rnaseq <- DESeqDataSetFromMatrix(countData = table_rnaseq,colData = adf,design = ~ CellType)
+#check the object dimensions
+dim(dds_rnaseq)
+head(rownames(dds_rnaseq))
+colnames(dds_rnaseq)
+#check the object type
+class(dds_rnaseq)
+typeof(dds_rnaseq)
+
+#check what this object contains
+slotNames(dds_rnaseq)
+colnames(colData(dds_rnaseq))
+colnames(assay(dds_rnaseq))
+
+```
+
+Quality Filtering Genes
+Apply filters to remove genes that do not pass quality filters.
+```{r apply_filters, echo=FALSE}
+#first filter based upon counts
+keep <- rowSums(counts(dds_rnaseq)) > 1
+dds_rnaseq <- dds_rnaseq[keep,]
+nrow(dds_rnaseq)
+```
+
+## Normalisation of Data
+
+```{r normalisation, echo=TRUE}
+#size factor estimation for normalisation- these are used to scale by library size when data is exported.
+dds_rnaseq <- estimateSizeFactors(dds_rnaseq)
+sizeFactors(dds_rnaseq)
+
+```
+
+## DESeq2 also provides methods that outputs data with various normalisations.
+Here we generate multiple different normalisations and compare between then- but for the rest of the tutorial we use rlog normalisation!  Note that the normalised data is not used for differential expression analysis- just for data visualisation.
+
+
+```{r plot_normalised, echo=FALSE}
+
+#Normalised log counts
+counts_rnaseq <-log2(counts(dds_rnaseq, normalized=TRUE))
+#fpm is similar to cpm and discussed here https://rdrr.io/bioc/DESeq2/man/fpm.html.  Here the data is log transformed
+fpm_rnaseq <-log(fpm(dds_rnaseq))#this is also normalised by the sizeFactors
+#rlog ad vsd are discussed here https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8
+vsd_rnaseq <- vst(dds_rnaseq, blind = T)
+head(vsd_rnaseq, 3)
+rld_rnaseq <- rlog(dds_rnaseq, blind = T)
+head(rld_rnaseq, 3)
+
+
+```
+We will use rlog for the rest of this tutorial, but here we compare the different normalised data
+
+##Plots with Normalised Data.
+
+```{r build_plots, echo=FALSE}
+
+#Boxplots need some labels..
+boxplot(counts_rnaseq)
+boxplot(fpm_rnaseq)
+boxplot(assay(vsd_rnaseq))#etc
+boxplot(assay(rld_rnaseq))#etc
+#but suppose we look at non-normalised
+na.rm=T
+counts_un <-counts(dds_rnaseq, normalized=FALSE)+1
+
+boxplot(log2(counts_un))
+counts_un_rlog<-rlog(counts_un)
+
+
+
+
+
+#We can make an mva.pairs plot for any of these data
+#mva.pairs(counts_un_rlog,na.rm=TRUE)
+
+```
+
+Exploratory Data Plots
+PCA plots similar to those we use for microarrays.
+
+
+```{r more_explore, echo=FALSE}
+#we can run a PCA plot here...
+library(scatterplot3d)
+library(ggplot2)
+# Perform PCA
+pca <- prcomp(t(na.omit(assay(rld_rnaseq))), scale=T)
+# Plot the PCA results
+s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours)
+s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
+text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq),pos = 3,offset = 0.5,cex=0.5)
+#or a quick plot in 2d
+qplot(pca$x[,1],pca$x[,2],xlab="PCA1", ylab="PCA2",color=adf$Colours)
+#We can also output a distance matrix…
+sampleDists <- dist(t(assay(rld_rnaseq)))
+sampleDists
+
+```
+## Generate further heatmaps with the data
+
+```{r more_heatma-s, echo=FALSE}
+library("pheatmap")
+library("RColorBrewer")
+sampleDistMatrix <- as.matrix(sampleDists)
+pheatmap(sampleDistMatrix)
+#easier PCA plot
+ress <-plotPCA(rld_rnaseq, intgroup = c("CellType"))
+ress <- ress + geom_label(aes(label = name))
+plot(ress)
+```
+
+
+## Differential Gene Expression
+Simplified stats
+
+```{r differential_expression, echo=FALSE}
+dds_rnaseq <- DESeq(dds_rnaseq)
+
+#We should apply this here https://support.bioconductor.org/p/77461/#107693
+#But there is a bug in this version of DESeq2!!
+#dds_rnaseq <- lfcShrink(dds_rnaseq, coef=2)
+
+
+#This is how you specify a contrast…
+result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono-MΦ"))
+
+
+
+#make a nice plot of differential expression
+plotMA(result_treatment, main="DESeq2 dispersion plot", ylim=c(-2,2))
+table(result_treatment$padj < 0.01)
+table(result_treatment$padj < 0.05)
+result_treatment_selected <- subset(result_treatment, padj < 0.05)
+result_treatment <-result_treatment[order(abs(result_treatment$stat),decreasing = TRUE), ]
+head(result_treatment)
+```
+
+## Make heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
+
+```{r differential_expression_heatmaps, echo=FALSE}
+top70 <-rownames(result_treatment)[1:70]
+#make a heatmap for the top 70
+pheatmap(assay(rld_rnaseq)[top70,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 70")
+#all
+pheatmap(assay(rld_rnaseq)[rownames(result_treatment),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
+
+
+```
+
+
+## Build Gene Annotation. A serialised is generated in case Ensembl is unavailable
+
+```{r build_gene_annotation, echo=TRUE}
+#Download Ensembl annotation using BiomaRt and rename the samples
+library(biomaRt)
+if(file.exists("resultAnnot.RData")){
+
+  load("resultAnnot.RData")
+  print("Loaded existing Ensembl annotation...")
+}else{
+  
+  #UK ensembl is being updated  we use a USA mirror, "useast.ensembl.org"
+  ensembl_host <-"https://www.ensembl.org"
+  head(biomaRt::listMarts(host = ensembl_host), 15)
+  head(biomaRt::listAttributes(biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart = useMart("ENSEMBL_MART_ENSEMBL",host = ensembl_host))), 40)
+  mart <- biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart    = useMart("ENSEMBL_MART_ENSEMBL",host    = ensembl_host))
+  resultAnnot <- biomaRt::getBM(values=rownames(dds_rnaseq),attributes =     c("ensembl_gene_id","external_gene_name","chromosome_name","start_position","end_position","description","strand"),filters="ensembl_gene_id",mart=mart)
+  save(resultAnnot,file="resultAnnot.RData")
+}
+
+```
+
+Merge Annotation with Input Data
+```{r merge_gene_annotation, echo=FALSE}
+#merge with input data
+names <- resultAnnot[,1]
+resultAnnot <- as.data.frame(resultAnnot)
+rownames(resultAnnot) = names
+idx<-match(rownames(dds_rnaseq),rownames(resultAnnot))
+#make sure annotation is in same order
+all(rownames(dds_rnaseq) == rownames(resultAnnot))
+grr<-resultAnnot[match(rownames(dds_rnaseq), resultAnnot$ensembl_gene_id),]
+all(rownames(dds_rnaseq) == rownames(grr))
+resultAnnot <-grr
+all(rownames(dds_rnaseq) == rownames(resultAnnot))
+#make the nice names
+nice_names<-paste(resultAnnot$ensembl_gene_id,resultAnnot$external_gene_name, sep = '_')
+resultAnnot$nice_names <-nice_names
+head(resultAnnot)
+all(rownames(dds_rnaseq) == rownames(resultAnnot))
+#check names
+rld_rnaseq <- rlog(dds_rnaseq, blind = TRUE)#
+idx2 <-match(rownames(result_treatment)[1:50],rownames(dds_rnaseq))
+plotme <-(rld_rnaseq)[rownames(result_treatment)[1:50],]
+rownames(plotme)<-resultAnnot$nice_names[idx2]
+#make heatmap with candidate genes
+png(filename="heatmap_candidates.png",width=800, height=1000)
+pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
+dev.off()
+
+pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
+
+```
+## Final Results Table
+Since we have annotation that matches gene names to candidates we can also annotate the results table from differential
+expression
+
+```{r merge_gene_annotation2, echo=FALSE}
+
+#this has the results ordered
+
+#before 
+head(result_treatment,50)
+
+idx2 <-match(rownames(result_treatment),rownames(resultAnnot))
+rownames(result_treatment)<-resultAnnot$nice_names[idx2]
+#after
+print(result_treatment[1:50,])
+
+#load into table viewer
+#View(as.data.frame(result_treatment[1:50,]))
+
+```
+
+## The source paper showed candidates in a volcano plot- this is to compare
+
+Current row names are not useful here- we need to use genes but then will discard any
+without known names. This is OK here because we are exploring the annotation -genes without
+a gene name and so are no use for annotating the data.
+
+We can still keep unannoted genes as candidates!
+
+```{r make_volcano, echo=FALSE}
+
+result_treatment$gene<-resultAnnot$external_gene_name[idx2]
+has_annot <- result_treatment$gene==""
+has_annot <-!has_annot
+result_treatment<-result_treatment[has_annot,]
+rownames(result_treatment)<-result_treatment$gene
+
+#Now we have gene names so we can plot the remaining genes in a volcano plot
+
+#there were highlighted as interesting in the paper
+paper_genes <-c("Zbtb16","Fkbp5","Hif3a","Slc6a3","Sox9","Trem2","Tyrobp","Clec7a","Phox2b")
+
+#just check they're measured in this annotation
+if(sum(paper_genes %in% rownames(result_treatment))==length(paper_genes)){
+  print("all genes found in data")
+}#you'd just include a subset to label if some genes were missing- here they are all present
+
+#The paper found...
+#for volvano see 
+#https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
+volcano_test <-EnhancedVolcano(result_treatment,
+    lab = rownames(result_treatment),
+    x = 'log2FoldChange',
+    y = 'padj',
+    selectLab = paper_genes,
+    xlab = bquote(~Log[2]~ 'fold change'),
+    pCutoff = 10e-5,
+    FCcutoff = 2.0,
+    pointSize = 4.0,
+    labSize = 6.0,
+    labCol = 'black',
+    labFace = 'bold',
+    boxedLabels = TRUE,
+    colAlpha = 4/5,
+    legendPosition = 'right',
+    legendLabSize = 10,
+    legendIconSize = 4.0,
+    drawConnectors = TRUE,
+    widthConnectors = 1.0,
+    colConnectors = 'black')
+
+plot(volcano_test,xlim=800,ylim=800)
+png("volcano_test.png",width = 800, height = 800)
+plot(volcano_test)
+dev.off()
+
+#and look at the table
+#View(as.data.frame(result_treatment[paper_genes,]))
+
+print(as.data.frame(result_treatment[paper_genes,]))
+
+
+```
+
+## Session Information
+```{r session_info, echo=FALSE}
+
+sessionInfo()
+
+```
+
+
 

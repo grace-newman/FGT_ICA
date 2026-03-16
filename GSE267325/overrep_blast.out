@@ -1,0 +1,25 @@
+seq1	gi|2756119784|ref|XR_010748078.1|	100.000	1.30e-15	93.5	PREDICTED: Saccopteryx leptura 28S ribosomal RNA (LOC136387118), rRNA
+seq1	gi|2548330551|gb|OQ915120.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC E_14 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330518|gb|OQ915119.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_4 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330516|gb|OQ915117.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_1 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq1	gi|2548330517|gb|OQ915118.1|	100.000	1.30e-15	93.5	Mus musculus clone BAC MEF_3 45S ribosomal RNA and 18S ribosomal RNA genes, partial sequence; internal transcribed spacer 1, 5.8S ribosomal RNA gene, internal transcribed spacer 2, 28S ribosomal RNA gene, 3' and 5' external transcribed spacers, complete sequence; and 18S ribosomal RNA gene, partial sequence
+seq2	gi|3187679826|pdb|9Y49|A6	100.000	1.30e-15	93.5	Chain A6, LSU-beta rRNA (2069-MER)
+seq2	gi|3187678712|pdb|9S3C|L5	100.000	1.30e-15	93.5	Chain L5, 28S rRNA
+seq2	gi|3037310462|ref|XR_012909298.1|	100.000	1.30e-15	93.5	PREDICTED: Microtus pennsylvanicus 28S ribosomal RNA (LOC142842328), rRNA
+seq2	gi|3059779691|ref|XR_013107683.1|	100.000	1.30e-15	93.5	PREDICTED: Arvicanthis niloticus 28S ribosomal RNA (LOC143439459), rRNA
+seq2	gi|3130401264|ref|XR_013444901.1|	100.000	1.30e-15	93.5	PREDICTED: Halichoerus grypus 28S ribosomal RNA (LOC144380689), rRNA
+seq3	gi|3222197610|emb|OZ416236.1|	100.000	1.68e-14	89.8	Myodes glareolus genome assembly, chromosome: 12
+seq3	gi|3222221650|emb|OZ416247.1|	100.000	1.68e-14	89.8	Myodes glareolus genome assembly, chromosome: 23
+seq3	gi|3222201559|emb|OZ416237.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 13
+seq3	gi|3222201559|emb|OZ416237.1|	100.000	2.80e-12	82.4	Myodes glareolus genome assembly, chromosome: 13
+seq3	gi|3222201559|emb|OZ416237.1|	95.556	1.69e-09	73.1	Myodes glareolus genome assembly, chromosome: 13
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|3222191626|emb|OZ416235.1|	89.362	4.73e-05	58.4	Myodes glareolus genome assembly, chromosome: 11
+seq3	gi|2919602537|emb|OZ238770.1|	100.000	6.03e-14	87.9	Alectoris rufa genome assembly, chromosome: 5
+seq3	gi|2919602537|emb|OZ238770.1|	100.000	6.03e-14	87.9	Alectoris rufa genome assembly, chromosome: 5
+seq4	gi|1944427|dbj|D88890.1|	100.000	1.30e-15	93.5	Rattus norvegicus mRNA for acyl-CoA hydrolase, complete cds
+seq4	gi|74199223|dbj|AK155253.1|	100.000	1.30e-15	93.5	Mus musculus NOD-derived CD11c +ve dendritic cells cDNA, RIKEN full-length enriched library, clone:F630212E05 product:testis derived transcript, full insert sequence
+seq4	gi|2295636632|pdb|7ZJX|L5	94.000	2.80e-12	82.4	Chain L5, 28S rRNA
+seq4	gi|2447596495|pdb|8B6C|5	94.000	2.80e-12	82.4	Chain 5, 28S rRNA
+seq4	gi|2047394252|pdb|7O7Y|B5	94.000	2.80e-12	82.4	Chain B5, 28S rRNA
