@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Analysis of RNA-seq data using R 
+## Analysis of GSE267325 RNA-seq data using R 
+
 ```{r init, echo=FALSE}
 #Load the required libraries & load the files for the tutorial
 library(Rsubread)
@@ -28,16 +29,17 @@ ls()
 dir()
 ```
 
-Once we have loaded the data we are ready to run some further analysis.
+Next we will use R to generate the targets file.
 
 ```{r input_processing, echo=FALSE}
-#Some further processing to access count data and column names.
-table_rnaseq <- (mytable_feaures)$counts
+# Some further processing to access count data and column names.
+# Reference: FGT ICA Example Analysis
+table_rnaseq <- (mytable_feaures)$counts # this is the expression data
 colnames_rnaseq <- colnames(table_rnaseq)
 print(colnames_rnaseq)
 
-# Generate an 'adf data frame' for the annotation.  
-#This can be loaded from file but here I generate in code for a change...
+# Generate an 'adf data frame' for the annotation targets file.  
+# Reference: FGT ICA Example Analysis
 adf <-data.frame(Colnames =colnames_rnaseq)
 library(stringr)
 locc <- str_locate_all(pattern="Aligned.sortedByCoord.out.bam",adf$Colnames)
@@ -53,20 +55,22 @@ adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 # GSM8263920  Mono-MΦ3-CSF
 
 
-#My samples are in the same order as the annotaion so I can just create some short names and add to annotation
-adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono-MΦ1","Mono-MΦ2","Mono-MΦ3")
+#My samples are in the same order as the annotation so I will create some short names and add to annotation
+adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono_M1","Mono_M2","Mono_M3")
 
 # Create a factor for the macrophage type
-cell_type <-c("dLAM", "dLAM", "dLAM", "Mono-MΦ", "Mono-MΦ", "Mono-MΦ")
+cell_type <-c("dLAM", "dLAM", "dLAM", "Mono_M", "Mono_M", "Mono_M")
 adf$CellType <- cell_type
 
 #Add some colours as well
+# Reference: FGT ICA Example Analysis
 #See https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
 z <- factor(adf$CellType)
 adf$Colours <-rainbow(length(levels(z)))[z]
 
 
-#make sure the colnames of the study match the rownames of the annotation...
+# Make sure the colnames of the study match the rownames of the annotation.
+# Reference: FCT ICA Example Analysis
 rownames(adf) <-adf$Colnames
 if(identical(colnames_rnaseq,rownames(adf))==FALSE){
   print("Names do not match")
@@ -74,15 +78,18 @@ if(identical(colnames_rnaseq,rownames(adf))==FALSE){
   print("Names match.. OK to proceed")
 }
 
-#OK switch to shortnames to help with the figures
+# Switch to shortnames to help with the figures
 #We can only swap this way because column order to consistent with adf
 rownames(adf) <-adf$ShortNames
 colnames(table_rnaseq) <-adf$ShortNames
 
 colnames_rnaseq <-colnames(table_rnaseq)
 
+# Save the annotated data frame as a targets file
+# Reference: Code adapted from Using R for Data Science Lecture 2
+write.csv(adf, file="targets_GSE267325.csv", row.names=TRUE)
 ```
-
+Once we have loaded the data and generated the annotation (saved as targets file) we are ready to run some further analysis.
 
 ## Loading the Data into DESeq
 DESeq2 will used for the statistical analysis and the normalisation of the data. 
@@ -158,8 +165,6 @@ counts_un <-counts(dds_rnaseq, normalized=FALSE)+1
 
 boxplot(log2(counts_un))
 counts_un_rlog<-rlog(counts_un)
-
-
 
 
 
