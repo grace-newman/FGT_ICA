@@ -11,12 +11,7 @@ seq2	gi|3130401264|ref|XR_013444901.1|	100.000	1.30e-15	93.5	PREDICTED: Halichoe
 seq3	gi|3222197610|emb|OZ416236.1|	100.000	1.68e-14	89.8	Myodes glareolus genome assembly, chromosome: 12
 seq3	gi|3222221650|emb|OZ416247.1|	100.000	1.68e-14	89.8	Myodes glareolus genome assembly, chromosome: 23
 seq3	gi|3222201559|emb|OZ416237.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 13
-seq3	gi|3222201559|emb|OZ416237.1|	100.000	2.80e-12	82.4	Myodes glareolus genome assembly, chromosome: 13
-seq3	gi|3222201559|emb|OZ416237.1|	95.556	1.69e-09	73.1	Myodes glareolus genome assembly, chromosome: 13
 seq3	gi|3222191626|emb|OZ416235.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 11
-seq3	gi|3222191626|emb|OZ416235.1|	100.000	6.03e-14	87.9	Myodes glareolus genome assembly, chromosome: 11
-seq3	gi|3222191626|emb|OZ416235.1|	89.362	4.73e-05	58.4	Myodes glareolus genome assembly, chromosome: 11
-seq3	gi|2919602537|emb|OZ238770.1|	100.000	6.03e-14	87.9	Alectoris rufa genome assembly, chromosome: 5
 seq3	gi|2919602537|emb|OZ238770.1|	100.000	6.03e-14	87.9	Alectoris rufa genome assembly, chromosome: 5
 seq4	gi|1944427|dbj|D88890.1|	100.000	1.30e-15	93.5	Rattus norvegicus mRNA for acyl-CoA hydrolase, complete cds
 seq4	gi|74199223|dbj|AK155253.1|	100.000	1.30e-15	93.5	Mus musculus NOD-derived CD11c +ve dendritic cells cDNA, RIKEN full-length enriched library, clone:F630212E05 product:testis derived transcript, full insert sequence
