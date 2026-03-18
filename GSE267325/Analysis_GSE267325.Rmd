@@ -24,13 +24,12 @@ library(pheatmap)
 library(EnhancedVolcano)
 load("mytable_feaures")
 
-#We now have files for the tutorial and also data loaded into the workspace- use ls() and dir() to view this data
+#We now have files for the tutorial and also data loaded into the workspace
 ls()
 dir()
 ```
 
 Next we will use R to generate the targets file.
-
 ```{r input_processing, echo=FALSE}
 # Some further processing to access count data and column names.
 # Reference: FGT ICA Example Analysis
@@ -45,7 +44,8 @@ library(stringr)
 locc <- str_locate_all(pattern="Aligned.sortedByCoord.out.bam",adf$Colnames)
 adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 
-#From the GEO page for this study-https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE267325
+# Sample Annotation from the GEO page for this study: 
+# https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE267325
 
 # GSM8263915  dLAM1-CSF
 # GSM8263916  dLAM2-CSF
@@ -54,22 +54,21 @@ adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 # GSM8263919  Mono-MΦ2-CSF
 # GSM8263920  Mono-MΦ3-CSF
 
-
-#My samples are in the same order as the annotation so I will create some short names and add to annotation
-adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono_M1","Mono_M2","Mono_M3")
+#My samples are in the same order as the annotation, so I will add the short names to the annotation table
+# Reference: https://stackoverflow.com/questions/5293715/how-to-use-greek-symbols-in-ggplot2
+adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono_M\u03A61","Mono_M\u03A62","Mono_M\u03A63")
 
 # Create a factor for the macrophage type
-cell_type <-c("dLAM", "dLAM", "dLAM", "Mono_M", "Mono_M", "Mono_M")
+cell_type <-c("dLAM", "dLAM", "dLAM", "Mono_M\u03A6", "Mono_M\u03A6", "Mono_M\u03A6")
 adf$CellType <- cell_type
 
-#Add some colours as well
+#Add colours to the annotation table
 # Reference: FGT ICA Example Analysis
-#See https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
+# Reference: https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
 z <- factor(adf$CellType)
 adf$Colours <-rainbow(length(levels(z)))[z]
 
-
-# Make sure the colnames of the study match the rownames of the annotation.
+# Confirm colnames of the study match the rownames of the annotation.
 # Reference: FCT ICA Example Analysis
 rownames(adf) <-adf$Colnames
 if(identical(colnames_rnaseq,rownames(adf))==FALSE){
@@ -79,6 +78,7 @@ if(identical(colnames_rnaseq,rownames(adf))==FALSE){
 }
 
 # Switch to shortnames to help with the figures
+# Reference: FGT ICA Example Analysis 
 #We can only swap this way because column order to consistent with adf
 rownames(adf) <-adf$ShortNames
 colnames(table_rnaseq) <-adf$ShortNames
@@ -91,32 +91,37 @@ write.csv(adf, file="targets_GSE267325.csv", row.names=TRUE)
 ```
 Once we have loaded the data and generated the annotation (saved as targets file) we are ready to run some further analysis.
 
-## Loading the Data into DESeq
+## Loading the Data into DESeq2
 DESeq2 will used for the statistical analysis and the normalisation of the data. 
 ```{r loading_deseq, echo=FALSE}
-#Create object for DESeq
-#NOTE the design for differential analysis is fed into this object 
-dds_rnaseq <- DESeqDataSetFromMatrix(countData = table_rnaseq,colData = adf,design = ~ CellType)
-#check the object dimensions
+# Reference for code chunk: FGT ICA Example Analysis
+
+# Create object for DESeq2
+dds_rnaseq <- DESeqDataSetFromMatrix(countData = table_rnaseq, colData = adf, design = ~ CellType)
+
+# Check the object dimensions
 dim(dds_rnaseq)
 head(rownames(dds_rnaseq))
 colnames(dds_rnaseq)
-#check the object type
+
+#Check the object type
 class(dds_rnaseq)
 typeof(dds_rnaseq)
 
-#check what this object contains
+#Check what this object contains
 slotNames(dds_rnaseq)
 colnames(colData(dds_rnaseq))
 colnames(assay(dds_rnaseq))
 
 ```
 
-Quality Filtering Genes
-Apply filters to remove genes that do not pass quality filters.
+#Quality Filtering Genes
+
+Apply filters to remove genes that do not pass quality filters. In this case, we filter for genes with counts greater than one.
 ```{r apply_filters, echo=FALSE}
-#first filter based upon counts
-keep <- rowSums(counts(dds_rnaseq)) > 1
+# First filter based upon counts
+# Reference for code chunk: FGT ICA Example Analysis
+keep <- rowSums(counts(dds_rnaseq)) > 2
 dds_rnaseq <- dds_rnaseq[keep,]
 nrow(dds_rnaseq)
 ```
@@ -124,74 +129,86 @@ nrow(dds_rnaseq)
 ## Normalisation of Data
 
 ```{r normalisation, echo=TRUE}
-#size factor estimation for normalisation- these are used to scale by library size when data is exported.
+# Reference for code chunk: FGT ICA Example Analysis
+# Size factor estimation for normalisation- these are used to scale by library size when data is exported.
 dds_rnaseq <- estimateSizeFactors(dds_rnaseq)
 sizeFactors(dds_rnaseq)
 
 ```
 
 ## DESeq2 also provides methods that outputs data with various normalisations.
-Here we generate multiple different normalisations and compare between then- but for the rest of the tutorial we use rlog normalisation!  Note that the normalised data is not used for differential expression analysis- just for data visualisation.
-
+Here we generate multiple different normalisations and compare between thenm.
 
 ```{r plot_normalised, echo=FALSE}
-
+# Reference for code chunk: FGT ICA Example Analysis
 #Normalised log counts
-counts_rnaseq <-log2(counts(dds_rnaseq, normalized=TRUE))
+counts_rnaseq <-log2(counts(dds_rnaseq, normalized=TRUE)+1)
+
 #fpm is similar to cpm and discussed here https://rdrr.io/bioc/DESeq2/man/fpm.html.  Here the data is log transformed
-fpm_rnaseq <-log(fpm(dds_rnaseq))#this is also normalised by the sizeFactors
+fpm_rnaseq <-log(fpm(dds_rnaseq)+1) #this is also normalised by the sizeFactors
+
 #rlog ad vsd are discussed here https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8
 vsd_rnaseq <- vst(dds_rnaseq, blind = T)
-head(vsd_rnaseq, 3)
+#head(vsd_rnaseq, 3)
+
 rld_rnaseq <- rlog(dds_rnaseq, blind = T)
-head(rld_rnaseq, 3)
-
-
+#head(rld_rnaseq, 3)
 ```
 We will use rlog for the rest of this tutorial, but here we compare the different normalised data
 
 ##Plots with Normalised Data.
 
 ```{r build_plots, echo=FALSE}
-
-#Boxplots need some labels..
-boxplot(counts_rnaseq)
-boxplot(fpm_rnaseq)
-boxplot(assay(vsd_rnaseq))#etc
-boxplot(assay(rld_rnaseq))#etc
-#but suppose we look at non-normalised
-na.rm=T
+# Reference for code chunk: FGT ICA Example Analysis
+#Boxplot for non-normalized data
 counts_un <-counts(dds_rnaseq, normalized=FALSE)+1
+boxplot(log2(counts_un), main="Non-Normalized Expression Data", ylab="log2 Expression", col=adf$Colours, las = 2)
 
-boxplot(log2(counts_un))
 counts_un_rlog<-rlog(counts_un)
+boxplot(counts_un_rlog, main="Non-Normalized Expression Data", ylab="rlog Expression", col=adf$Colours, las = 2)
 
-
-
-#We can make an mva.pairs plot for any of these data
-#mva.pairs(counts_un_rlog,na.rm=TRUE)
+# Boxplots for normalized data
+na.rm=T
+boxplot(counts_rnaseq, main="Normalized Expression Data", ylab="log2 Expression", col=adf$Colours, las = 2)
+boxplot(fpm_rnaseq, main="FPM Normalized Expression Data", ylab="log Expression", col=adf$Colours, las = 2)
+boxplot(assay(vsd_rnaseq), main=" VST Normalized Expression Data", ylab="log Expression", col=adf$Colours, las = 2)
+boxplot(assay(rld_rnaseq), main="rlog Normalized Expression Data", ylab="rlog Expression", col=adf$Colours, las = 2)
 
 ```
 
-Exploratory Data Plots
-PCA plots similar to those we use for microarrays.
+The non-normalized plots do not present any concerns. The samples and replicates groups all have similar means and interquartile ranges.
 
+Comparing the different normalization techniques, rlog works the best. The rlog normalized data has the most consistent mean and interquartile range spread across samples. For the rest of the pipeline, we will use rlog.
 
-```{r more_explore, echo=FALSE}
-#we can run a PCA plot here...
-library(scatterplot3d)
+#Exploratory Data Plots
+
+First, we will view the MvA plots to compare all sample pairs.
+```{r mva_plots, echo=FALSE}
+# Reference for code chunk: FGT ICA Example Analysis
+# Non-normalized rlog expression
+mva.pairs(counts_un_rlog, main="MvA Plot for Non-Normalized rlog Expression Data")
+
+# Normailized rlog expression
+mva.pairs(assay(rld_rnaseq), main="MvA Plot for Normalized rlog Expression Data")
+```
+After normalization, the majority of MvA plots are denser and flatter with points centered around zero, indicating that the normalization worked adequately. 
+
+The authors of the orginal paper used a 2-dimensional PCA.
+```{r pca_explore, echo=FALSE}
+
+# Reference for code chunk: FGT ICA Example Analysis
 library(ggplot2)
+
 # Perform PCA
 pca <- prcomp(t(na.omit(assay(rld_rnaseq))), scale=T)
+
 # Plot the PCA results
-s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours)
-s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
-text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq),pos = 3,offset = 0.5,cex=0.5)
-#or a quick plot in 2d
-qplot(pca$x[,1],pca$x[,2],xlab="PCA1", ylab="PCA2",color=adf$Colours)
+# Reference: https://ggplot2.tidyverse.org/reference/geom_text.html#ref-examples
+# Reference: https://www.statology.org/remove-legend-ggplot2/ 
+qplot(pca$x[,1],pca$x[,2], xlab="PCA1", ylab="PCA2", color=adf$CellType) + geom_text(label = adf$ShortNames, check_overlap=TRUE, nudge_y = -10) + theme(legend.position="none")
 #We can also output a distance matrix…
-sampleDists <- dist(t(assay(rld_rnaseq)))
-sampleDists
+#sampleDists <- dist(t(assay(rld_rnaseq)))
+#sampleDists
 
 ```
 ## Generate further heatmaps with the data
@@ -220,27 +237,27 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 
 
 #This is how you specify a contrast…
-result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono-MΦ"))
+result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono_MΦ"))
 
 
 
 #make a nice plot of differential expression
-plotMA(result_treatment, main="DESeq2 dispersion plot", ylim=c(-2,2))
-table(result_treatment$padj < 0.01)
-table(result_treatment$padj < 0.05)
-result_treatment_selected <- subset(result_treatment, padj < 0.05)
-result_treatment <-result_treatment[order(abs(result_treatment$stat),decreasing = TRUE), ]
-head(result_treatment)
+plotMA(result_celltype, main="DESeq2 dispersion plot", ylim=c(-2,2))
+table(result_celltype$padj < 0.01)
+table(result_celltype$padj < 0.05)
+result_celltype_selected <- subset(result_celltype, padj < 0.05)
+result_celltype <-result_celltype[order(abs(result_celltype$stat),decreasing = TRUE), ]
+head(result_celltype)
 ```
 
 ## Make heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
 
 ```{r differential_expression_heatmaps, echo=FALSE}
-top70 <-rownames(result_treatment)[1:70]
+top70 <-rownames(result_celltype)[1:70]
 #make a heatmap for the top 70
 pheatmap(assay(rld_rnaseq)[top70,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 70")
 #all
-pheatmap(assay(rld_rnaseq)[rownames(result_treatment),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
+pheatmap(assay(rld_rnaseq)[rownames(result_celltype),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
 
 
 ```
