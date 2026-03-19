@@ -39,10 +39,10 @@ print(colnames_rnaseq)
 
 # Generate an 'adf data frame' for the annotation targets file.  
 # Reference: FGT ICA Example Analysis
-adf <-data.frame(Colnames =colnames_rnaseq)
+adf <-data.frame(Colnames = colnames_rnaseq)
 library(stringr)
 locc <- str_locate_all(pattern="Aligned.sortedByCoord.out.bam",adf$Colnames)
-adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
+adf$GEOAccession <- substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 
 # Sample Annotation from the GEO page for this study: 
 # https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE267325
@@ -56,17 +56,26 @@ adf$ShortGEOName <-substr(adf$Colnames,1,locc[[1]][,"start"]-1)
 
 #My samples are in the same order as the annotation, so I will add the short names to the annotation table
 # Reference: https://stackoverflow.com/questions/5293715/how-to-use-greek-symbols-in-ggplot2
-adf$ShortNames <-c("dLAM1","dLAM2","dLAM3","Mono_M\u03A61","Mono_M\u03A62","Mono_M\u03A63")
+adf$ShortNames <- c("dLAM1","dLAM2","dLAM3","Mono_M\u03A61","Mono_M\u03A62","Mono_M\u03A63")
 
 # Create a factor for the macrophage type
-cell_type <-c("dLAM", "dLAM", "dLAM", "Mono_M\u03A6", "Mono_M\u03A6", "Mono_M\u03A6")
+cell_type <- c("dLAM", "dLAM", "dLAM", "Mono_M\u03A6", "Mono_M\u03A6", "Mono_M\u03A6")
 adf$CellType <- cell_type
+
+# Add more annotation data to the adf data frame...
+# BioSample
+adf$BioSample <- c("SAMN41382413", "SAMN41382412", "SAMN41382411", "SAMN41382410", "SAMN41382409", "SAMN41382408")
+
+# Experiment
+adf$Experiment <- c("SRX24727943","	SRX24727944", "SRX24727945", "SRX24727946", "SRX24727947", "SRX24727948")
 
 #Add colours to the annotation table
 # Reference: FGT ICA Example Analysis
 # Reference: https://stackoverflow.com/questions/42288075/how-to-autogenerate-color-vector-from-a-numeric-vector
 z <- factor(adf$CellType)
 adf$Colours <-rainbow(length(levels(z)))[z]
+
+# Check the column names of the annotation table (adf)
 
 # Confirm colnames of the study match the rownames of the annotation.
 # Reference: FCT ICA Example Analysis
@@ -82,12 +91,12 @@ if(identical(colnames_rnaseq,rownames(adf))==FALSE){
 #We can only swap this way because column order to consistent with adf
 rownames(adf) <-adf$ShortNames
 colnames(table_rnaseq) <-adf$ShortNames
-
 colnames_rnaseq <-colnames(table_rnaseq)
 
 # Save the annotated data frame as a targets file
 # Reference: Code adapted from Using R for Data Science Lecture 2
 write.csv(adf, file="targets_GSE267325.csv", row.names=TRUE)
+
 ```
 Once we have loaded the data and generated the annotation (saved as targets file) we are ready to run some further analysis.
 
@@ -117,11 +126,11 @@ colnames(assay(dds_rnaseq))
 
 #Quality Filtering Genes
 
-Apply filters to remove genes that do not pass quality filters. In this case, we filter for genes with counts greater than one.
+Apply filters to remove genes that do not pass quality filters. In this case, we filter for genes with counts greater than ten.
 ```{r apply_filters, echo=FALSE}
 # First filter based upon counts
 # Reference for code chunk: FGT ICA Example Analysis
-keep <- rowSums(counts(dds_rnaseq)) > 2
+keep <- rowSums(counts(dds_rnaseq)) > 10
 dds_rnaseq <- dds_rnaseq[keep,]
 nrow(dds_rnaseq)
 ```
@@ -154,7 +163,7 @@ vsd_rnaseq <- vst(dds_rnaseq, blind = T)
 rld_rnaseq <- rlog(dds_rnaseq, blind = T)
 #head(rld_rnaseq, 3)
 ```
-We will use rlog for the rest of this tutorial, but here we compare the different normalised data
+We will use rlog for the rest of this tutorial, but here we compare the different normalized data.
 
 ##Plots with Normalised Data.
 
@@ -180,6 +189,14 @@ The non-normalized plots do not present any concerns. The samples and replicates
 
 Comparing the different normalization techniques, rlog works the best. The rlog normalized data has the most consistent mean and interquartile range spread across samples. For the rest of the pipeline, we will use rlog.
 
+```{r best_boxplot echo=FALSE}
+# Save the best plot as png for the report
+png("normalized_boxplot.png")
+boxplot(assay(rld_rnaseq), main="rlog Normalized Expression Data", ylab="rlog Expression", col=adf$Colours, las = 2, cex.axis = 0.7)
+dev.off()
+```
+
+
 #Exploratory Data Plots
 
 First, we will view the MvA plots to compare all sample pairs.
@@ -188,7 +205,7 @@ First, we will view the MvA plots to compare all sample pairs.
 # Non-normalized rlog expression
 mva.pairs(counts_un_rlog, main="MvA Plot for Non-Normalized rlog Expression Data")
 
-# Normailized rlog expression
+# Normalized rlog expression
 mva.pairs(assay(rld_rnaseq), main="MvA Plot for Normalized rlog Expression Data")
 ```
 After normalization, the majority of MvA plots are denser and flatter with points centered around zero, indicating that the normalization worked adequately. 
@@ -199,34 +216,67 @@ The authors of the orginal paper used a 2-dimensional PCA.
 # Reference for code chunk: FGT ICA Example Analysis
 library(ggplot2)
 
+# 2-dimensional PCA plot
+# Reference: https://ggplot2.tidyverse.org/reference/geom_text.html#ref-examples
+# Reference: https://www.statology.org/remove-legend-ggplot2/ 
+# Reference: https://felixfan.github.io/ggplot2-remove-grid-background-margin/ 
+ress <-plotPCA(rld_rnaseq, intgroup = c("CellType"))
+ress <- ress + 
+  geom_text(label = adf$ShortNames,check_overlap=FALSE, size=3, nudge_x=-5, nudge_y=0.5) +
+  theme_bw() + 
+  labs(title = "PCA Plot", color="Cell Type") + 
+  theme(aspect.ratio=1/2) +
+  theme(legend.position="none")
+plot(ress)
+
+# Save PCA plot as png for report
+png("pca_plot.png")
+ress <-plotPCA(rld_rnaseq, intgroup = c("CellType"))
+ress <- ress + 
+  geom_text(label = adf$ShortNames,check_overlap=FALSE, size=3, nudge_x=-5, nudge_y=0.5) +
+  theme_bw() + 
+  labs(title = "PCA Plot", color="Cell Type") +
+  theme(aspect.ratio=1/2) +
+  theme(legend.position="none")
+plot(ress)
+dev.off()
+
+```
+
+```{r 3d_pca, echo=FALSE}
+library(scatterplot3d)
+
 # Perform PCA
 pca <- prcomp(t(na.omit(assay(rld_rnaseq))), scale=T)
 
-# Plot the PCA results
-# Reference: https://ggplot2.tidyverse.org/reference/geom_text.html#ref-examples
-# Reference: https://www.statology.org/remove-legend-ggplot2/ 
-qplot(pca$x[,1],pca$x[,2], xlab="PCA1", ylab="PCA2", color=adf$CellType) + geom_text(label = adf$ShortNames, check_overlap=TRUE, nudge_y = -10) + theme(legend.position="none")
-#We can also output a distance matrix…
-#sampleDists <- dist(t(assay(rld_rnaseq)))
-#sampleDists
-
+# Plot the PCA results for the first three principle components
+s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main = "PCA Plot")
+s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
+text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq), pos = 3,offset = 0.5, cex=0.5)
 ```
-## Generate further heatmaps with the data
+
+
+## Generate heatmaps with the data
 
 ```{r more_heatma-s, echo=FALSE}
 library("pheatmap")
 library("RColorBrewer")
-sampleDistMatrix <- as.matrix(sampleDists)
-pheatmap(sampleDistMatrix)
-#easier PCA plot
-ress <-plotPCA(rld_rnaseq, intgroup = c("CellType"))
-ress <- ress + geom_label(aes(label = name))
-plot(ress)
-```
 
+# Generate a distance matrix
+sampleDists <- dist(t(assay(rld_rnaseq)))
+#sampleDists
+
+sampleDistMatrix <- as.matrix(sampleDists)
+pheatmap(sampleDistMatrix, main="Heatmap of Gene Expression Differences", display_numbers = TRUE)
+
+# Save as png for report
+pheatmap(sampleDistMatrix, main="Heatmap of Gene Expression Differences", display_numbers = TRUE, file="sample_differences_heatmap.png")
+```
+The sample distances represent the differences between gene expression between every pair of samples. We see no difference between one cell type and itself, which makes sense. We see that the cell types cluster together. There is more between group variance than within group variance. The dLAM1 sample and the Mono-Mφ3 sample are the most different. This agrees with what we see on the PCA plot. The cell types cluster together.  
 
 ## Differential Gene Expression
-Simplified stats
+
+Here we perform a two factor analysis using DESeq2.
 
 ```{r differential_expression, echo=FALSE}
 dds_rnaseq <- DESeq(dds_rnaseq)
@@ -237,27 +287,42 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 
 
 #This is how you specify a contrast…
-result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono_MΦ"))
+# This gives us a table of differentially expressed genes
+result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono_M\u03A6"))
 
 
+# padj is the p-value with a multiple testing correction
+# Plot of differential expression
+plotMA(result_celltype, main="DESeq2 Dispersion Plot", ylim=c(-10,10))
 
-#make a nice plot of differential expression
-plotMA(result_celltype, main="DESeq2 dispersion plot", ylim=c(-2,2))
+# Create a table of the differentially expressed genes with padj values < 0.01
 table(result_celltype$padj < 0.01)
+
+# Create a table of the differentially expressed genes with padj values < 0.05
 table(result_celltype$padj < 0.05)
+
+# Create a table of significant genes
 result_celltype_selected <- subset(result_celltype, padj < 0.05)
-result_celltype <-result_celltype[order(abs(result_celltype$stat),decreasing = TRUE), ]
-head(result_celltype)
+
+# Order the significant genes by fold change
+result_celltype_selected <-result_celltype_selected[order(abs(result_celltype_selected$log2FoldChange),decreasing = TRUE), ]
+head(result_celltype_selected)
 ```
+We find 3657 genes with significant differential expression at a p-adjusted threshold value of 0.01.
+
+We find 5233 genes with significant differential expression at a p-adjusted threshold value of 0.05.
 
 ## Make heatmaps from each of the output tables- selected top 50 or all using fold change and FDR.
 
 ```{r differential_expression_heatmaps, echo=FALSE}
-top70 <-rownames(result_celltype)[1:70]
-#make a heatmap for the top 70
-pheatmap(assay(rld_rnaseq)[top70,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 70")
-#all
-pheatmap(assay(rld_rnaseq)[rownames(result_celltype),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
+top50 <-rownames(result_celltype_selected)[1:50]
+
+# Make a heatmap for the top 50 differentially expressed genes
+# Here we are indexing the rlog normalized count data using the rownames of the top 50 significantly differentially expressed genes
+pheatmap(assay(rld_rnaseq)[top50,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 50")
+
+# Make a heatmap for all of the genes
+pheatmap(assay(rld_rnaseq)[rownames(result_celltype_selected),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
 
 
 ```
