@@ -288,7 +288,7 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 
 #This is how you specify a contrast…
 # This gives us a table of differentially expressed genes
-result_celltype <-results(dds_rnaseq,contrast=c("CellType","dLAM", "Mono_M\u03A6"))
+result_celltype <-results(dds_rnaseq, contrast=c("CellType","dLAM", "Mono_M\u03A6"))
 
 
 # padj is the p-value with a multiple testing correction
@@ -321,11 +321,13 @@ top50 <-rownames(result_celltype_selected)[1:50]
 # Here we are indexing the rlog normalized count data using the rownames of the top 50 significantly differentially expressed genes
 pheatmap(assay(rld_rnaseq)[top50,],scale="row",show_rownames=F,main="RLD values, Row Scaled, Top 50")
 
-# Make a heatmap for all of the genes
+# Make a heatmap for all of the significant genes
 pheatmap(assay(rld_rnaseq)[rownames(result_celltype_selected),],scale="row",show_rownames=F,main="Treatment Selected, Row Scaled")
 
 
 ```
+
+We are comparing resident macrophages to recruited macrophages. These are very different and so it makes sense that like all of the genes are differentially expressed.
 
 
 ## Build Gene Annotation. A serialised is generated in case Ensembl is unavailable
@@ -334,13 +336,12 @@ pheatmap(assay(rld_rnaseq)[rownames(result_celltype_selected),],scale="row",show
 #Download Ensembl annotation using BiomaRt and rename the samples
 library(biomaRt)
 if(file.exists("resultAnnot.RData")){
-
   load("resultAnnot.RData")
   print("Loaded existing Ensembl annotation...")
 }else{
   
   #UK ensembl is being updated  we use a USA mirror, "useast.ensembl.org"
-  ensembl_host <-"https://www.ensembl.org"
+  ensembl_host <-"https://useast.ensembl.org"
   head(biomaRt::listMarts(host = ensembl_host), 15)
   head(biomaRt::listAttributes(biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart = useMart("ENSEMBL_MART_ENSEMBL",host = ensembl_host))), 40)
   mart <- biomaRt::useDataset(dataset = "mmusculus_gene_ensembl",mart    = useMart("ENSEMBL_MART_ENSEMBL",host    = ensembl_host))
@@ -357,23 +358,41 @@ names <- resultAnnot[,1]
 resultAnnot <- as.data.frame(resultAnnot)
 rownames(resultAnnot) = names
 idx<-match(rownames(dds_rnaseq),rownames(resultAnnot))
-#make sure annotation is in same order
+
+
+# Make sure annotation is in same order
 all(rownames(dds_rnaseq) == rownames(resultAnnot))
 grr<-resultAnnot[match(rownames(dds_rnaseq), resultAnnot$ensembl_gene_id),]
 all(rownames(dds_rnaseq) == rownames(grr))
 resultAnnot <-grr
 all(rownames(dds_rnaseq) == rownames(resultAnnot))
-#make the nice names
+
+# The boolean statements above are returning FALSE values so I will check 
+# whether most of the genes are matching
+# Reference: https://stackoverflow.com/questions/74111575/difference-between-in-and-in-operator-in-r 
+
+# Genes that have a match in the annotation table
+sum(rownames(dds_rnaseq) %in% resultAnnot$ensembl_gene_id)
+
+# Genes that don't have a match in the annotation table
+sum(!rownames(dds_rnaseq) %in% resultAnnot$ensembl_gene_id)
+
+# It looks like only a few genes (13) are missing annotations
+
+
+# Make the nice names
 nice_names<-paste(resultAnnot$ensembl_gene_id,resultAnnot$external_gene_name, sep = '_')
 resultAnnot$nice_names <-nice_names
 head(resultAnnot)
 all(rownames(dds_rnaseq) == rownames(resultAnnot))
+
 #check names
 rld_rnaseq <- rlog(dds_rnaseq, blind = TRUE)#
-idx2 <-match(rownames(result_treatment)[1:50],rownames(dds_rnaseq))
-plotme <-(rld_rnaseq)[rownames(result_treatment)[1:50],]
+idx2 <-match(rownames(result_celltype_selected)[1:50],rownames(dds_rnaseq))
+plotme <-(rld_rnaseq)[rownames(result_celltype_selected)[1:50],]
 rownames(plotme)<-resultAnnot$nice_names[idx2]
-#make heatmap with candidate genes
+
+# Make heatmap with candidate genes
 png(filename="heatmap_candidates.png",width=800, height=1000)
 pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
 dev.off()
@@ -382,23 +401,32 @@ pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =
 
 ```
 ## Final Results Table
-Since we have annotation that matches gene names to candidates we can also annotate the results table from differential
-expression
+Since we have annotation that matches gene names to candidates we can also annotate the results table from differential expression.
+
+13 genes do not have missing annotations as we discovered above. To deal with this, I labeled the missing annotations as "unannotated", rather than removing the genes.
 
 ```{r merge_gene_annotation2, echo=FALSE}
 
 #this has the results ordered
 
 #before 
-head(result_treatment,50)
+head(result_celltype,50)
 
-idx2 <-match(rownames(result_treatment),rownames(resultAnnot))
-rownames(result_treatment)<-resultAnnot$nice_names[idx2]
+idx2 <-match(rownames(result_celltype),rownames(resultAnnot))
+
+# Reference:
+# ChatGPT was consulted to generate some ideas for dealing with missing annotations
+names_no_na <- resultAnnot$nice_names[idx2]
+names_no_na[is.na(names_no_na)] <- paste0(rownames(result_celltype)[is.na(names_no_na)], "_Unannotated")
+
+rownames(result_celltype) <- names_no_na
+
+
 #after
-print(result_treatment[1:50,])
+print(result_celltype[1:50,])
 
 #load into table viewer
-#View(as.data.frame(result_treatment[1:50,]))
+#View(as.data.frame(result_celltype[1:50,]))
 
 ```
 
@@ -408,34 +436,42 @@ Current row names are not useful here- we need to use genes but then will discar
 without known names. This is OK here because we are exploring the annotation -genes without
 a gene name and so are no use for annotating the data.
 
-We can still keep unannoted genes as candidates!
+We can still keep unannotated genes as candidates!
 
 ```{r make_volcano, echo=FALSE}
 
-result_treatment$gene<-resultAnnot$external_gene_name[idx2]
-has_annot <- result_treatment$gene==""
+result_celltype$gene<-resultAnnot$external_gene_name[idx2]
+
+# Reference: Using R for Data Science Tutorial 7b Logical Operators
+has_annot <- result_celltype$gene=="" | is.na(result_celltype$gene)
 has_annot <-!has_annot
-result_treatment<-result_treatment[has_annot,]
-rownames(result_treatment)<-result_treatment$gene
+result_celltype<-result_celltype[has_annot,]
+rownames(result_celltype)<-result_celltype$gene
 
 #Now we have gene names so we can plot the remaining genes in a volcano plot
 
 #there were highlighted as interesting in the paper
-paper_genes <-c("Zbtb16","Fkbp5","Hif3a","Slc6a3","Sox9","Trem2","Tyrobp","Clec7a","Phox2b")
+paper_genes <-c("Mmp2","Mmp3","Mmp7","Mmp8","Mmp9","Mmp11","Mmp12","Mmp13","Mmp14","Mmp15","Mmp16","Mmp17","Mmp19","Mmp21","Mmp23","Mmp24","Mmp25","Mmp27","Mmp28")
 
 #just check they're measured in this annotation
-if(sum(paper_genes %in% rownames(result_treatment))==length(paper_genes)){
+if(sum(paper_genes %in% rownames(result_celltype))==length(paper_genes)){
   print("all genes found in data")
-}#you'd just include a subset to label if some genes were missing- here they are all present
+} else {
+  print(sum(paper_genes %in% rownames(result_celltype)))
+}
+
+annotated_paper_genes <- paper_genes[paper_genes %in% rownames(result_celltype)]
+print(annotated_paper_genes)
+#you'd just include a subset to label if some genes were missing- here they are all present
 
 #The paper found...
 #for volvano see 
 #https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
-volcano_test <-EnhancedVolcano(result_treatment,
-    lab = rownames(result_treatment),
+volcano_test <-EnhancedVolcano(result_celltype,
+    lab = rownames(result_celltype),
     x = 'log2FoldChange',
     y = 'padj',
-    selectLab = paper_genes,
+    selectLab = annotated_paper_genes,
     xlab = bquote(~Log[2]~ 'fold change'),
     pCutoff = 10e-5,
     FCcutoff = 2.0,
@@ -458,12 +494,37 @@ plot(volcano_test)
 dev.off()
 
 #and look at the table
-#View(as.data.frame(result_treatment[paper_genes,]))
-
-print(as.data.frame(result_treatment[paper_genes,]))
+#View(as.data.frame(result_celltype[annotated_paper_genes,]))
+mmp_result <- result_celltype[annotated_paper_genes,]
+print(as.data.frame(result_celltype[annotated_paper_genes,]))
 
 
 ```
+
+Heatmap of the Mmp family genes
+```{r Mmp_heatmap, echo=FALSE}
+
+# Reference: ChatGPT
+mmp_ids <- resultAnnot$ensembl_gene_id[resultAnnot$external_gene_name %in% annotated_paper_genes]
+rld_rnaseq <- rlog(dds_rnaseq, blind = TRUE)
+plotme <- assay(rld_rnaseq)[rownames(rld_rnaseq) %in% mmp_ids,]
+idx3 <- match(rownames(plotme), resultAnnot$ensembl_gene_id)
+rownames(plotme) <- resultAnnot$external_gene_name[idx3]
+
+
+
+
+# Make heatmap with Mmp genes
+png(filename="heatmap_Mmp.png",width=800, height=1000)
+pheatmap(plotme,scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
+dev.off()
+
+pheatmap(plotme,scale="column",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
+
+
+```
+
+
 
 ## Session Information
 ```{r session_info, echo=FALSE}
