@@ -289,7 +289,8 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 #This is how you specify a contrast…
 # This gives us a table of differentially expressed genes
 result_celltype <-results(dds_rnaseq, contrast=c("CellType","dLAM", "Mono_M\u03A6"))
-
+write.csv(result_celltype, "results.csv")
+results_gsea <- result_celltype # use this table for GSEA
 
 # padj is the p-value with a multiple testing correction
 # Plot of differential expression
@@ -451,7 +452,7 @@ rownames(result_celltype)<-result_celltype$gene
 #Now we have gene names so we can plot the remaining genes in a volcano plot
 
 #there were highlighted as interesting in the paper
-paper_genes <-c("Mmp2","Mmp3","Mmp7","Mmp8","Mmp9","Mmp11","Mmp12","Mmp13","Mmp14","Mmp15","Mmp16","Mmp17","Mmp19","Mmp21","Mmp23","Mmp24","Mmp25","Mmp27","Mmp28")
+paper_genes <-c("Cd74", "Mrc1", "Cd163", "Dab2", "Lyve1", "Ms4a7", "Cxcl9", "Mmp14", "Apoe", "Arg1", "Cx3cr1", "Il10")
 
 #just check they're measured in this annotation
 if(sum(paper_genes %in% rownames(result_celltype))==length(paper_genes)){
@@ -460,32 +461,54 @@ if(sum(paper_genes %in% rownames(result_celltype))==length(paper_genes)){
   print(sum(paper_genes %in% rownames(result_celltype)))
 }
 
-annotated_paper_genes <- paper_genes[paper_genes %in% rownames(result_celltype)]
-print(annotated_paper_genes)
+#annotated_paper_genes <- paper_genes[paper_genes %in% rownames(result_celltype)]
+#print(annotated_paper_genes)
 #you'd just include a subset to label if some genes were missing- here they are all present
+
+
+```
+
+```{r volcano}
 
 #The paper found...
 #for volvano see 
 #https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html
+# Reference: https://bioconductor.org/packages/devel/bioc/vignettes/EnhancedVolcano/inst/doc/EnhancedVolcano.html 
+
+keyvals.colour <- ifelse(
+    result_celltype$log2FoldChange < -1 & result_celltype$padj < 0.05, 'royalblue',
+      ifelse(result_celltype$log2FoldChange > 1 & result_celltype$padj < 0.05, 'red3', 'grey'))
+  keyvals.colour[is.na(keyvals.colour)] <- 'grey'
+  names(keyvals.colour)[keyvals.colour == 'red3'] <- 'Up'
+  names(keyvals.colour)[keyvals.colour == 'grey'] <- 'NS'
+  names(keyvals.colour)[keyvals.colour == 'royalblue'] <- 'Down'
+
 volcano_test <-EnhancedVolcano(result_celltype,
     lab = rownames(result_celltype),
     x = 'log2FoldChange',
     y = 'padj',
-    selectLab = annotated_paper_genes,
+    selectLab = paper_genes,
     xlab = bquote(~Log[2]~ 'fold change'),
-    pCutoff = 10e-5,
-    FCcutoff = 2.0,
-    pointSize = 4.0,
-    labSize = 6.0,
+    pCutoff = 5e-02,
+    FCcutoff = 1.0,
+    xlim = c(-9, 9),
+    ylim = c(0, 90),
+    pointSize = 3,
+    labSize = 7.0,
+    title = "Differential Expression Results",
+    subtitle = "dLAMs vs Mono_M\u03A6",
     labCol = 'black',
-    labFace = 'bold',
-    boxedLabels = TRUE,
+    boxedLabels = FALSE,
+    colCustom = keyvals.colour,
     colAlpha = 4/5,
-    legendPosition = 'right',
-    legendLabSize = 10,
-    legendIconSize = 4.0,
+    legendPosition = 'top',
+    legendLabSize = 15,
+    arrowheads = FALSE,
+    gridlines.major = FALSE,
+    gridlines.minor = FALSE,
+    legendIconSize = 5,
     drawConnectors = TRUE,
-    widthConnectors = 1.0,
+    widthConnectors = 1,
     colConnectors = 'black')
 
 plot(volcano_test,xlim=800,ylim=800)
@@ -495,32 +518,32 @@ dev.off()
 
 #and look at the table
 #View(as.data.frame(result_celltype[annotated_paper_genes,]))
-mmp_result <- result_celltype[annotated_paper_genes,]
-print(as.data.frame(result_celltype[annotated_paper_genes,]))
-
+mmp_result <- result_celltype[paper_genes,]
+print(as.data.frame(result_celltype[paper_genes,]))
 
 ```
 
-Heatmap of the Mmp family genes
+
+Heatmap of the paper genes
 ```{r Mmp_heatmap, echo=FALSE}
 
-# Reference: ChatGPT
-mmp_ids <- resultAnnot$ensembl_gene_id[resultAnnot$external_gene_name %in% annotated_paper_genes]
 rld_rnaseq <- rlog(dds_rnaseq, blind = TRUE)
-plotme <- assay(rld_rnaseq)[rownames(rld_rnaseq) %in% mmp_ids,]
+paper_ids <- resultAnnot$ensembl_gene_id[resultAnnot$external_gene_name %in% paper_genes]
+
+plotme <- (rld_rnaseq)[rownames(rld_rnaseq) %in% paper_ids,]
+
 idx3 <- match(rownames(plotme), resultAnnot$ensembl_gene_id)
 rownames(plotme) <- resultAnnot$external_gene_name[idx3]
 
 
 
 
-# Make heatmap with Mmp genes
-png(filename="heatmap_Mmp.png",width=800, height=1000)
-pheatmap(plotme,scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
+# Make heatmap with paper genes
+png(filename="heatmap_paper_genes.png",width=800, height=1000)
+pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
 dev.off()
 
-pheatmap(plotme,scale="column",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
-
+pheatmap(assay(plotme),scale="row",fontsize_row = 10,cellheight =12, cellwidth =12,treeheight_row = 40, treeheight_col = 40)
 
 ```
 
@@ -530,6 +553,182 @@ pheatmap(plotme,scale="column",fontsize_row = 10,cellheight =12, cellwidth =12,t
 ```{r session_info, echo=FALSE}
 
 sessionInfo()
+
+```
+
+
+### Functional Enrichment Analysis
+This script performs Functional Enrichment Analysis using the fgsea package
+The results table generated from the Advanced RNA-seq analysis is used as input
+The functional data comes from the Molecular Signatures Database (as used for the microarray analysis as well)
+
+```{r gsea, echo=FALSE}
+
+library(fgsea)
+library(dplyr)
+
+results_df <- as.data.frame(results_gsea)
+head(results_df)
+rownames(results_df)
+results_df$ensembl_id <- rownames(results_df)
+head(results_df)
+```
+
+
+```{r gsea2, echo=FALSE}
+
+#grab the hallmark gene set from bioinf.wehi.edu.au
+#generally it is better to cache download results, not download each time, but this file is small!
+#You may also wish to check for updates to the annotation.
+download.file("https://bioinf.wehi.edu.au/software/MSigDB/mouse_H_v5p2.rdata", destfile = "mouse_H_v5p2.rdata")
+load("mouse_H_v5p2.rdata")
+
+#We need to map to EntrezIDs- the annotation uses EntrezID
+head(Mm.H)
+
+```
+
+
+```{r}
+library(biomaRt)
+mart <- useDataset("mmusculus_gene_ensembl", mart=useMart("ensembl"))
+#listAttributes(mart)
+ens2entrez <- getBM(attributes=c("ensembl_gene_id", "entrezgene_id"), mart=mart)
+head(ens2entrez)
+```
+
+
+```{r}
+#Map gene names to entrezgene_id
+#if NA remove (we only need to consider mappable genes)
+
+results2 <- inner_join(results_df, ens2entrez, by=join_by("ensembl_id"=="ensembl_gene_id"))
+
+head(results2,n=40)
+```
+
+
+```{r}
+#sanity check one or two of the results eg
+
+# 5	914.136325	0.52866957	0.1782715	2.96553109	0.0030216080	2.96553109	0.0030216080	0.021383688	ENSMUSG00000051285	319263
+
+ens2entrez[which(ens2entrez$ensembl_gene_id  == "ENSMUSG00000051285"),]
+
+#remove any that are NA
+results2 <-results2[is.na(results2$entrezgene_id)==FALSE,]
+dim(results2)
+
+head(results2)
+```
+
+
+```{r}
+#This analysis takes a ranked list of numbers with entrez IDs as names
+#We need to choose how to order the hits
+#Here I order by stat value- we could use bidirectional ordering using FC or some combination of FC and FDR
+results2 <-results2[order(results2$padj,decreasing=FALSE),]
+
+results2 <-results2[,c("padj","entrezgene_id")]
+
+#remove non-unique row names- we don't mind deleting these in this case
+#it is wise to check the genes that are duplicated to see if they should be excluded
+results2 <-results2[!duplicated(results2$entrezgene_id),]
+
+
+rownames(results2)<-results2[,"entrezgene_id"]
+results2["entrezgene_id"] <-NULL
+
+
+#it might want  a named vector
+rn <-rownames(results2)
+colnames(results2) <-NULL
+results2 <-results2[,1]
+names(results2)<-rn
+
+head(results2)
+
+#time to perform the enrichment analysis
+results2  <- results2[!(is.na(names(results2)))]
+results2  <- results2[!(is.na(results2))]
+results2 <-log2(results2)
+
+fgseaRes <- fgsea(Mm.H, results2, minSize=25, maxSize = 500)
+
+fgseaRes <-fgseaRes[order(fgseaRes$NES,decreasing=FALSE),]
+head(fgseaRes)
+
+plotEnrichment(Mm.H[["HALLMARK_ALLOGRAFT_REJECTION"]],results2)
+
+#etc
+#More analysis approaches can be found
+#https://bioconductor.org/packages/release/bioc/html/fgsea.html
+
+  
+```
+
+
+
+### GO analysis
+```{r install_packages, echo=FALSE}
+# Reference: https://www.youtube.com/watch?v=JPwdqdo_tRg
+
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("clusterProfiler")
+
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("AnnotationDbi")
+
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("org.Mm.eg.db")
+
+```
+
+
+```{r load libraries}
+
+library(clusterProfiler)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
+
+```
+
+
+```{r}
+head(results_df)
+
+head(as.data.frame(result_celltype_selected))
+
+selected <- rownames((result_celltype_selected))
+selected
+```
+
+```{r go}
+
+GO_results <- enrichGO(selected, "org.Mm.eg.db", keyType = "ENSEMBL", ont = "BP")
+
+```
+
+```{r}
+as.data.frame(GO_results)
+
+GO_fig <- barplot(GO_results, showCategory = 15, x="GeneRatio", title="Gene Ontology: dLAM vs Mono_M\u03A6")
+plot(GO_fig)
+
+png("go_barplot.png")
+plot(GO_fig)
+dev.off()
+
+```
+
+
+```{r}
 
 ```
 
