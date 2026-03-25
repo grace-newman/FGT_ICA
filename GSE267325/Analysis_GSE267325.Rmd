@@ -168,17 +168,22 @@ rld_rnaseq <- rlog(dds_rnaseq, blind = T)
 # Reference for code chunk: FGT ICA Example Analysis
 #Boxplot for non-normalized data
 counts_un <-counts(dds_rnaseq, normalized=FALSE)+1
-boxplot(log2(counts_un), main="Non-Normalized Count Data", ylab="log2 Expression", col=adf$Colours, las = 2)
+boxplot(log2(counts_un), main="Log2 Non-Normalized RNA-Seq Counts", ylab="log2 Counts", col=adf$Colours, las = 2)
+
+# Save the non-normalized boxplot
+png("non_normalized_boxplot.png", res=300, width = 2000, height = 1200)
+boxplot(log2(counts_un), main="Log2 Non-Normalized RNA-Seq Counts", ylab="log2 Counts", col=adf$Colours, las = 2, cex.axis = 0.7)
+dev.off()
 
 counts_un_rlog<-rlog(counts_un)
-boxplot(counts_un_rlog, main="Non-Normalized Count Data", ylab="rlog Expression", col=adf$Colours, las = 2)
+boxplot(counts_un_rlog, main="Non-Normalized rlog Expression Data", ylab="rlog Counts", col=adf$Colours, las = 2)
 
 # Boxplots for normalized data
 na.rm=T
-boxplot(counts_rnaseq, main="Normalized Count Data", ylab="log2 Counts", col=adf$Colours, las = 2)
-boxplot(fpm_rnaseq, main="FPM Normalized Count Data", ylab="log Counts", col=adf$Colours, las = 2)
-boxplot(assay(vsd_rnaseq), main=" VST Normalized Count Data", ylab="log Counts", col=adf$Colours, las = 2)
-boxplot(assay(rld_rnaseq), main="rlog Normalized Count Data", ylab="rlog Counts", col=adf$Colours, las = 2)
+boxplot(counts_rnaseq, main="Normalized Expression Data", ylab="log2 Expression", col=adf$Colours, las = 2)
+boxplot(fpm_rnaseq, main="Log2 FPM RNA-Seq Counts", ylab="log2 FPM Counts", col=adf$Colours, las = 2)
+boxplot(assay(vsd_rnaseq), main=" VST Normalized RNA-Seq Count Data", ylab="log2 VST Counts", col=adf$Colours, las = 2)
+boxplot(assay(rld_rnaseq), main="rlog Normalized RNA-Seq Expression Data", ylab="rlog Expression", col=adf$Colours, las = 2)
 
 ```
 
@@ -189,7 +194,7 @@ The different normalization techniques serve different purposes. The rlog normal
 ```{r save_boxplot echo=FALSE}
 # Save the rlog normalized boxplot as png for the report
 png("normalized_boxplot.png", res=300, width = 2000, height = 1200)
-boxplot(assay(rld_rnaseq), main="rlog Normalized Count Data", ylab="rlog Counts", col=adf$Colours, las = 2, cex.axis = 0.7)
+boxplot(assay(rld_rnaseq), main="rlog Normalized RNA-Seq Expression Data", ylab="rlog Expression", col=adf$Colours, las = 2, cex.axis = 0.7)
 dev.off()
 ```
 
@@ -241,13 +246,13 @@ library(scatterplot3d)
 pca <- prcomp(t(na.omit(assay(rld_rnaseq))), scale=T)
 
 # Plot the PCA results for the first three principle components
-s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main = "PCA of RNA-seq")
+s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main = "PCA of RNA-seq Samples")
 s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
 text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq), pos = 3,offset = 0.5, cex=0.5)
 
 # Save PCA plot for report
 png("pca_plot_3d.png", res=300, width = 2000, height = 1200)
-s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main = "PCA of RNA-seq")
+s3d<-scatterplot3d(pca$x[,1:3], pch=19, color=adf$Colours, main = "PCA of RNA-seq Samples")
 s3d.coords <- s3d$xyz.convert(pca$x[,1:3])
 text(s3d.coords$x, s3d.coords$y, labels = colnames(rld_rnaseq), pos = 3,offset = 0.5, cex=0.5)
 dev.off()
@@ -260,6 +265,7 @@ dev.off()
 ```{r more_heatma-s, echo=FALSE}
 # Reference for code chunk: FGT ICA Example Analysis
 # Reference: https://r-graph-gallery.com/38-rcolorbrewers-palettes.html 
+# Reference: https://www.r-bloggers.com/2010/12/r-using-rcolorbrewer-to-colour-your-figures-in-r/ 
 library("pheatmap")
 
 # Generate a distance matrix
@@ -267,12 +273,18 @@ sampleDists <- dist(t(assay(rld_rnaseq)))
 #sampleDists
 
 sampleDistMatrix <- as.matrix(sampleDists)
-pheatmap(sampleDistMatrix, main="Heatmap of Gene Expression Differences by Sample", color = brewer.pal(11, "PRGn"), display_numbers = FALSE)
+pheatmap(sampleDistMatrix, 
+         main="Heatmap of Gene Expression Differences by Sample", 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
+         display_numbers = FALSE)
 
 # Save as png for report
-pheatmap(sampleDistMatrix, main="Heatmap of Gene Expression Differences by Sample", color = brewer.pal(11, "PRGn"), display_numbers = FALSE, file="sample_differences_heatmap.png")
+pheatmap(sampleDistMatrix, 
+         main="Heatmap of Gene Expression Differences by Sample", 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
+         display_numbers = FALSE, file="sample_differences_heatmap.png")
 ```
-The sample distances represent the differences between gene expression between every pair of samples. We see no difference between one cell type and itself, which makes sense. We see that the cell types cluster together. There is more between group variance than within group variance. The dLAM1 sample and the Mono-Mφ3 sample are the most different. This agrees with what we see on the PCA plot. The cell types cluster together.  
+The sample distances represent the differences between gene expression between every pair of samples. We see no difference between one cell type and itself, which makes sense. We see that the cell types cluster together. There is more between group variance than within group variance. The dLAM1 sample and the Mono-MΦ3 sample are the most different. This agrees with what we see on the PCA plot. The cell types cluster together.  
 
 ## Differential Gene Expression
 Here we perform a two factor analysis using DESeq2.
@@ -281,18 +293,22 @@ Here we perform a two factor analysis using DESeq2.
 dds_rnaseq <- DESeq(dds_rnaseq)
 
 #We should apply this here https://support.bioconductor.org/p/77461/#107693
-#But there is a bug in this version of DESeq2!!
+#But there is a bug in this version of DESeq2
 #dds_rnaseq <- lfcShrink(dds_rnaseq, coef=2)
 
 # Specify the contrast
 # This gives us a table of differentially expressed genes
 result_celltype <-results(dds_rnaseq, contrast=c("CellType", "dLAM", "Mono_M\u03A6"))
 write.csv(result_celltype, "results.csv") # save the results to a csv file
-results_gsea <- result_celltype # use this copy of the table later for GSEA
 
 # padj is the p-value with a multiple testing correction
 # Plot of differential expression
-plotMA(result_celltype, main="DESeq2 Dispersion Plot", ylim=c(-10,10))
+plotMA(result_celltype, alpha=0.05, colNonSig = "gray60", colSig = "#7FC97F", colLine = "grey40", main="DESeq2 Dispersion Plot", ylim=c(-10,10))
+
+# save dispersion plot
+png("dispersion.png")
+plotMA(result_celltype, alpha=0.05, colNonSig = "gray60", colSig = "#7FC97F", colLine = "grey40", main="DESeq2 Dispersion Plot", ylim=c(-10,10))
+dev.off()
 
 # Create a table of the differentially expressed genes with padj values < 0.01
 table(result_celltype$padj < 0.01)
@@ -302,10 +318,12 @@ table(result_celltype$padj < 0.05)
 
 # Create a table of significant genes
 result_celltype_selected <- subset(result_celltype, padj < 0.05)
+results_gsea <- result_celltype_selected # use this copy of the table later for GSEA
 
 # Order the significant (padj < 0.05) genes by fold change
 result_celltype_selected <-result_celltype_selected[order(abs(result_celltype_selected$log2FoldChange),decreasing = TRUE), ]
-head(result_celltype_selected)
+head(result_celltype_selected, 10)
+write.csv(result_celltype_selected[1:10,],"top10genes.csv")
 ```
 We find 3657 genes with significant differential expression at a p-adjusted threshold value of 0.01.
 
@@ -323,30 +341,42 @@ pheatmap(assay(rld_rnaseq)[top10,],
          cluster_rows = TRUE,
          cluster_cols = TRUE,
          show_rownames=T,
-         color = brewer.pal(11, "PRGn"), 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
          main="Top 10 Differentially Expressed Genes")
+
+# Save heatmap of top 10 differentially expressed genes
+pheatmap(assay(rld_rnaseq)[top10,],
+         scale="row",
+         cluster_rows = TRUE,
+         cluster_cols = TRUE,
+         show_rownames=T,
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
+         main="Top 10 Differentially Expressed Genes", 
+         file = "heatmap_top10.png")
 
 # Make a heatmap for the top 50 differentially expressed genes
 top50 <-rownames(result_celltype_selected)[1:50]
 # Here we are indexing the rlog normalized count data using the rownames of the top 50 significantly differentially expressed genes
 pheatmap(assay(rld_rnaseq)[top50,],
-         scale="row",show_rownames=F, 
-         color = brewer.pal(11, "PRGn"), 
+         scale="row",
+         show_rownames=F, 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
          main="Top 50 Differentially Expressed Genes")
 
 # Make a heatmap for all of the significant genes
 pheatmap(assay(rld_rnaseq)[rownames(result_celltype_selected),],
-         scale="row",show_rownames=F,
-         color = brewer.pal(11, "PRGn"),
+         scale="row",
+         show_rownames=F,
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100),
          main="Heatmap of all Significantly Differentially Expressed Genes")
 
 # Save heatmap of all genes
-png("heatmap_all.png", res=300, width = 3000, height = 1200)
 pheatmap(assay(rld_rnaseq)[rownames(result_celltype_selected),],
-         scale="row",show_rownames=F,
-         color = brewer.pal(11, "PRGn"),
-         main="Heatmap of all Significantly Differentially Expressed Genes")
-dev.off()
+         scale="row",
+         show_rownames=F,
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100),
+         main="Heatmap of all Significantly Differentially Expressed Genes",
+         file = "heatmap_all.png")
 
 ```
 
@@ -425,7 +455,7 @@ pheatmap(assay(plotme),
          cluster_rows = TRUE,
          cluster_cols = TRUE,
          show_rownames=T,
-         color = brewer.pal(11, "PRGn"), 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
          main="Top 10 Differentially Expressed Genes",
          fontsize_row = 10,
          cellheight =12, cellwidth =12,
@@ -433,20 +463,19 @@ pheatmap(assay(plotme),
          treeheight_col = 30)
 
 # Save heatmap to a file
-png("top10_heatmap.png", res=300, width = 3000, height = 1200)
 pheatmap(assay(plotme),
          scale="row",
          cluster_rows = TRUE,
          cluster_cols = TRUE,
          show_rownames=T,
-         color = brewer.pal(11, "PRGn"), 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
          main="Top 10 Differentially Expressed Genes",
          fontsize_row = 10,
          cellheight =12, 
          cellwidth =12,
          treeheight_row = 20, 
-         treeheight_col = 20)
-dev.off()
+         treeheight_col = 20,
+         file = "top10_heatmap.png")
 
 ```
 ## Final Results Table
@@ -463,7 +492,7 @@ head(result_celltype,50)
 
 idx2 <-match(rownames(result_celltype),rownames(resultAnnot))
 
-# Reference: ChatGPT was consulted to generate some ideas for dealing with missing annotations
+# Reference: ChatGPT was consulted to generate some ideas for dealing with missing annotations. Code was not taken directly from ChatGPT.
 names_no_na <- resultAnnot$nice_names[idx2]
 names_no_na[is.na(names_no_na)] <- paste0(rownames(result_celltype)[is.na(names_no_na)], "_Unannotated")
 
@@ -478,13 +507,13 @@ print(result_celltype[1:50,])
 
 ```
 
-## The source paper showed candidates in a volcano plot- this is to compare
+## The source paper showed candidates in a volcano plot - this is to compare
 
 Current row names are not useful here- we need to use genes but then will discard any
 without known names. This is OK here because we are exploring the annotation -genes without
 a gene name and so are no use for annotating the data.
 
-We can still keep unannotated genes as candidates!
+We can still keep unannotated genes as candidates.
 
 ```{r make_volcano, echo=FALSE}
 # Reference for code chunk: Modified from FGT ICA Example Analysis
@@ -508,10 +537,9 @@ if(sum(paper_genes %in% rownames(result_celltype))==length(paper_genes)){
   print(sum(paper_genes %in% rownames(result_celltype)))
 }
 
+#you'd just include a subset to label if some genes were missing- here they are all present
 #annotated_paper_genes <- paper_genes[paper_genes %in% rownames(result_celltype)]
 #print(annotated_paper_genes)
-#you'd just include a subset to label if some genes were missing- here they are all present
-
 
 ```
 
@@ -555,7 +583,7 @@ volcano_test <-EnhancedVolcano(result_celltype,
     colConnectors = 'black')
 
 plot(volcano_test,xlim=800,ylim=800)
-png("volcano_test.png",width = 2000, height = 2000, res=300)
+png("volcano.png",width = 2000, height = 2000, res=300)
 plot(volcano_test)
 dev.off()
 
@@ -567,8 +595,8 @@ print(as.data.frame(result_celltype[paper_genes,]))
 ```
 
 
-Heatmap of the paper genes
-```{r Mmp_heatmap, echo=FALSE}
+Heatmap of the paper genes.
+```{r goi_heatmap, echo=FALSE}
 # Reference for code chunk: Modified from FGT ICA Example Analysis
 rld_rnaseq <- rlog(dds_rnaseq, blind = TRUE)
 paper_ids <- resultAnnot$ensembl_gene_id[resultAnnot$external_gene_name %in% paper_genes]
@@ -585,7 +613,7 @@ pheatmap(assay(plotme2),
          cluster_rows = TRUE,
          cluster_cols = TRUE,
          show_rownames=T,
-         color = brewer.pal(11, "PRGn"), 
+         color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
          main="Heatmap of Genes of Interest",
          fontsize_row = 10,
          cellheight =12, 
@@ -599,14 +627,15 @@ pheatmap(assay(plotme2),
 ### Functional Enrichment Analysis
 This script performs Functional Enrichment Analysis using the fgsea package
 The results table generated from the Advanced RNA-seq analysis is used as input
-The functional data comes from the Molecular Signatures Database (as used for the microarray analysis as well)
+The functional data comes from the Molecular Signatures Database (as used for the microarray analysis as well).
 
 ```{r gsea, echo=FALSE}
+# Reference: Modified from FGT gsea_script.R
 library(fgsea)
 library(dplyr)
 
 # We will use the results from the differential expression analysis
-results_df <- as.data.frame(results_gsea)
+results_df <- as.data.frame(subset(results_gsea, log2FoldChange > 2))
 head(results_df)
 rownames(results_df)
 results_df$ensembl_id <- rownames(results_df)
@@ -615,7 +644,7 @@ head(results_df)
 
 
 ```{r gsea2, echo=FALSE}
-# Reference for code chunk: FGT ICA Example Analysis
+# Reference for code chunk: Modified from FGT gsea_script.R
 #grab the hallmark gene set from bioinf.wehi.edu.au
 #generally it is better to cache download results, not download each time, but this file is small!
 #You may also wish to check for updates to the annotation.
@@ -629,7 +658,7 @@ head(Mm.H, 2)
 
 
 ```{r getBM, echo=FALSE}
-# Reference for code chunk: FGT ICA Example Analysis
+# Reference for code chunk: Modified from FGT gsea_script.R
 library(biomaRt)
 mart <- useDataset("mmusculus_gene_ensembl", mart=useMart("ensembl"))
 #listAttributes(mart)
@@ -639,7 +668,7 @@ head(ens2entrez)
 
 
 ```{r join_id, echo=FALSE}
-# Reference for code chunk: Modified from FGT ICA Example Analysis
+# Reference for code chunk: Modified from FGT gsea_script.R
 #Map gene names to entrezgene_id
 #if NA remove (we only need to consider mappable genes)
 
@@ -650,7 +679,8 @@ head(results2,n=40)
 
 
 ```{r sanity, echo=FALSE}
-# Reference for code chunk: Modified from FGT ICA Example Analysis
+# Reference for code chunk: Modified from Modified from FGT gsea_script.R
+
 #sanity check one or two of the results eg
 
 # 5	914.136325	0.52866957	0.1782715	2.96553109	0.0030216080	2.96553109	0.0030216080	0.021383688	ENSMUSG00000051285	319263
@@ -666,11 +696,14 @@ head(results2)
 
 
 ```{r rank, echo=FALSE}
-# Reference for code chunk: Modified from FGT ICA Example Analysis
+# Reference for code chunk: Modified from FGT gsea_script.R
 #This analysis takes a ranked list of numbers with entrez IDs as names
 #We need to choose how to order the hits
-#Here I order by stat value- we could use bidirectional ordering using FC or some combination of FC and FDR
-results2 <-results2[order(results2$stat,decreasing=FALSE),]
+#Here I order by fold change 
+
+# Order the significant (padj < 0.05) genes by fold change
+
+results2 <-results2[order(results2$log2FoldChange,decreasing=TRUE),]
 
 results2 <-results2[,c("padj","entrezgene_id")]
 
@@ -678,10 +711,8 @@ results2 <-results2[,c("padj","entrezgene_id")]
 #it is wise to check the genes that are duplicated to see if they should be excluded
 results2 <-results2[!duplicated(results2$entrezgene_id),]
 
-
 rownames(results2)<-results2[,"entrezgene_id"]
 results2["entrezgene_id"] <-NULL
-
 
 #it might want  a named vector
 rn <-rownames(results2)
@@ -691,7 +722,7 @@ names(results2)<-rn
 
 head(results2)
 
-#time to perform the enrichment analysis
+#perform the enrichment analysis
 results2  <- results2[!(is.na(names(results2)))]
 results2  <- results2[!(is.na(results2))]
 results2 <-log2(results2)
@@ -701,7 +732,7 @@ fgseaRes <- fgsea(Mm.H, results2, minSize=25, maxSize = 500)
 fgseaRes <-fgseaRes[order(fgseaRes$NES,decreasing=FALSE),]
 head(fgseaRes)
 
-plotEnrichment(Mm.H[["HALLMARK_INFLAMMATORY_RESPONSE"]],results2)
+plotEnrichment(Mm.H[["HALLMARK_INFLAMMATORY_RESPONSE"]],results2) # this particular gene set was chosen based on it's significance and its relevance to the study
 
 # Save plot
 png("fgsea_plot.png", res = 300, width = 2000, height = 1200)
@@ -744,9 +775,10 @@ library(org.Mm.eg.db)
 ```{r select_rows, echo=FALSE}
 head(results_df)
 
-head(as.data.frame(result_celltype_selected))
+# Create a subset up upregulated genes
+head(as.data.frame(subset(result_celltype_selected, log2FoldChange > 2)))
 
-selected <- rownames(result_celltype_selected)
+selected <- rownames(subset(result_celltype_selected, log2FoldChange > 2))
 selected
 ```
 
@@ -762,6 +794,9 @@ GO_results <- enrichGO(selected, "org.Mm.eg.db", keyType = "ENSEMBL", ont = "BP"
 as.data.frame(GO_results)
 
 GO_fig <- barplot(GO_results, showCategory = 15, x="GeneRatio", title="Gene Ontology: dLAM vs Mono_M\u03A6")
+GO_fig <- GO_fig + 
+  scale_fill_gradientn(colors = colorRampPalette(brewer.pal(11,"PRGn"))(100)) + 
+  theme_classic() 
 plot(GO_fig)
 
 png("go_barplot.png", res=300, width=2000, height=3000)
