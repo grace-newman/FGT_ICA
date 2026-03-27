@@ -138,13 +138,13 @@ nrow(dds_rnaseq)
 ## Normalisation of Data
 ```{r normalisation, echo=TRUE}
 # Reference for code chunk: FGT ICA Example Analysis
-# Size factor estimation for normalisation- these are used to scale by library size when data is exported.
+# Size factor estimation for normalisation - these are used to scale by library size when data is exported.
 dds_rnaseq <- estimateSizeFactors(dds_rnaseq)
 sizeFactors(dds_rnaseq)
 
 ```
 
-DESeq2 also provides methods that outputs data with various normalisations. Here, we generate multiple different normalisations and compare between thenm.
+DESeq2 also provides methods that outputs data with various normalisations. Here, we generate multiple different normalisations and compare between them.
 
 ```{r plot_normalised, echo=FALSE}
 # Reference for code chunk: FGT ICA Example Analysis
@@ -287,7 +287,7 @@ pheatmap(sampleDistMatrix,
 The sample distances represent the differences between gene expression between every pair of samples. We see no difference between one cell type and itself, which makes sense. We see that the cell types cluster together. There is more between group variance than within group variance. The dLAM1 sample and the Mono-MΦ3 sample are the most different. This agrees with what we see on the PCA plot. The cell types cluster together.  
 
 ## Differential Gene Expression
-Here we perform a two factor analysis using DESeq2.
+Here we perform a one factor (two-level) analysis using DESeq2.
 ```{r differential_expression, echo=FALSE}
 # Reference for code chunk: Modified from FGT ICA Example Analysis
 dds_rnaseq <- DESeq(dds_rnaseq)
@@ -300,9 +300,10 @@ dds_rnaseq <- DESeq(dds_rnaseq)
 # This gives us a table of differentially expressed genes
 result_celltype <-results(dds_rnaseq, contrast=c("CellType", "dLAM", "Mono_M\u03A6"))
 write.csv(result_celltype, "results.csv") # save the results to a csv file
+results_gsea <- result_celltype # use this copy of the table later for GSEA
 
 # padj is the p-value with a multiple testing correction
-# Plot of differential expression
+# Dispersion Plot
 plotMA(result_celltype, alpha=0.05, colNonSig = "gray60", colSig = "#7FC97F", colLine = "grey40", main="DESeq2 Dispersion Plot", ylim=c(-10,10))
 
 # save dispersion plot
@@ -318,7 +319,7 @@ table(result_celltype$padj < 0.05)
 
 # Create a table of significant genes
 result_celltype_selected <- subset(result_celltype, padj < 0.05)
-results_gsea <- result_celltype_selected # use this copy of the table later for GSEA
+
 
 # Order the significant (padj < 0.05) genes by fold change
 result_celltype_selected <-result_celltype_selected[order(abs(result_celltype_selected$log2FoldChange),decreasing = TRUE), ]
@@ -434,7 +435,7 @@ sum(rownames(dds_rnaseq) %in% resultAnnot$ensembl_gene_id)
 # Genes that don't have a match in the annotation table
 sum(!rownames(dds_rnaseq) %in% resultAnnot$ensembl_gene_id)
 
-# It looks like only a few genes (13) are missing annotations
+# It looks like only a few genes (13) are missing annotations, but most of them are matching correctly
 
 
 # Make the nice names
@@ -498,7 +499,6 @@ names_no_na[is.na(names_no_na)] <- paste0(rownames(result_celltype)[is.na(names_
 
 rownames(result_celltype) <- names_no_na
 
-
 #after
 print(result_celltype[1:50,])
 
@@ -512,8 +512,6 @@ print(result_celltype[1:50,])
 Current row names are not useful here- we need to use genes but then will discard any
 without known names. This is OK here because we are exploring the annotation -genes without
 a gene name and so are no use for annotating the data.
-
-We can still keep unannotated genes as candidates.
 
 ```{r make_volcano, echo=FALSE}
 # Reference for code chunk: Modified from FGT ICA Example Analysis
@@ -614,7 +612,6 @@ pheatmap(assay(plotme2),
          cluster_cols = TRUE,
          show_rownames=T,
          color = colorRampPalette(brewer.pal(11,"PRGn"))(100), 
-         main="Heatmap of Genes of Interest",
          fontsize_row = 10,
          cellheight =12, 
          cellwidth =12,
@@ -635,7 +632,7 @@ library(fgsea)
 library(dplyr)
 
 # We will use the results from the differential expression analysis
-results_df <- as.data.frame(subset(results_gsea, log2FoldChange > 2))
+results_df <- as.data.frame(results_gsea)
 head(results_df)
 rownames(results_df)
 results_df$ensembl_id <- rownames(results_df)
@@ -698,14 +695,11 @@ head(results2)
 ```{r rank, echo=FALSE}
 # Reference for code chunk: Modified from FGT gsea_script.R
 #This analysis takes a ranked list of numbers with entrez IDs as names
-#We need to choose how to order the hits
-#Here I order by fold change 
+# We will order the results by stat
 
-# Order the significant (padj < 0.05) genes by fold change
+results2 <-results2[order(results2$stat,decreasing=TRUE),]
 
-results2 <-results2[order(results2$log2FoldChange,decreasing=TRUE),]
-
-results2 <-results2[,c("padj","entrezgene_id")]
+results2 <-results2[,c("stat","entrezgene_id")]
 
 #remove non-unique row names- we don't mind deleting these in this case
 #it is wise to check the genes that are duplicated to see if they should be excluded
@@ -714,7 +708,7 @@ results2 <-results2[!duplicated(results2$entrezgene_id),]
 rownames(results2)<-results2[,"entrezgene_id"]
 results2["entrezgene_id"] <-NULL
 
-#it might want  a named vector
+#it might want a named vector
 rn <-rownames(results2)
 colnames(results2) <-NULL
 results2 <-results2[,1]
@@ -725,11 +719,11 @@ head(results2)
 #perform the enrichment analysis
 results2  <- results2[!(is.na(names(results2)))]
 results2  <- results2[!(is.na(results2))]
-results2 <-log2(results2)
+#results2 <-log2(results2) # this is not needed when ranking by stat
 
 fgseaRes <- fgsea(Mm.H, results2, minSize=25, maxSize = 500)
 
-fgseaRes <-fgseaRes[order(fgseaRes$NES,decreasing=FALSE),]
+fgseaRes <-fgseaRes[order(fgseaRes$NES,decreasing=TRUE),]
 head(fgseaRes)
 
 plotEnrichment(Mm.H[["HALLMARK_INFLAMMATORY_RESPONSE"]],results2) # this particular gene set was chosen based on it's significance and its relevance to the study
@@ -788,7 +782,7 @@ GO_results <- enrichGO(selected, "org.Mm.eg.db", keyType = "ENSEMBL", ont = "BP"
 
 ```
 
-```{r}
+```{r plot_go, echo=FALSE}
 # Reference: https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html
 
 as.data.frame(GO_results)
